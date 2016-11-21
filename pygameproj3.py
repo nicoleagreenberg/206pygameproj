@@ -36,20 +36,21 @@ class Explosion(pygame.sprite.Sprite):
         if self.index >= len(self.images):
             self.kill()
 
-# class Star(pygame.sprite.Sprite):
-#     def __init__(self, x, y):
-#         super(Star, self).__init__()
-#         self.image = pygame.Surface((2, 2))
-#         pygame.draw.circle(self.image,
-#                            (128, 128, 200),
-#                            (0, 0),
-#                            2,
-#                            0)
-#         self.rect = self.image.get_rect()
-#         self.rect.center = (x, y)
-#         self.velocity = 1
-#         self.size = 1
-#         self.colour = 128
+
+class Star(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super(Star, self).__init__()
+        self.image = pygame.Surface((2, 2))
+        pygame.draw.circle(self.image,
+                           (128, 128, 200),
+                           (0, 0),
+                           2,
+                           0)
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+        self.velocity = 1
+        self.size = 1
+        self.colour = 128
 
     def accelerate(self):
         self.image = pygame.Surface((1, self.size))
@@ -80,26 +81,27 @@ class Explosion(pygame.sprite.Sprite):
         else:
             self.rect.center = (x, y + self.velocity)
 
-# class BulletSprite(pygame.sprite.Sprite):
-#     def __init__(self, x, y):
-#         super(BulletSprite, self).__init__()
-#         self.image = pygame.Surface((10, 10))
-#         for i in range(5, 0, -1):
-#             color = 255.0 * float(i)/5
-#             pygame.draw.circle(self.image,
-#                                (0, 0, color),
-#                                (5, 5),
-#                                i,
-#                                0)
-#         self.rect = self.image.get_rect()
-#         self.rect.center = (x, y-25)
 
-#     def update(self):
-#         x, y = self.rect.center
-#         y -= 20
-#         self.rect.center = x, y
-#         if y <= 0:
-#             self.kill()
+class BulletSprite(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super(BulletSprite, self).__init__()
+        self.image = pygame.Surface((10, 10))
+        for i in range(5, 0, -1):
+            color = 255.0 * float(i)/5
+            pygame.draw.circle(self.image,
+                               (0, 0, color),
+                               (5, 5),
+                               i,
+                               0)
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y-25)
+
+    def update(self):
+        x, y = self.rect.center
+        y -= 20
+        self.rect.center = x, y
+        if y <= 0:
+            self.kill()
 
 class EggSprite(pygame.sprite.Sprite):
     def __init__(self, x_pos, groups):
@@ -107,9 +109,11 @@ class EggSprite(pygame.sprite.Sprite):
         self.image = pygame.image.load("egg.bmp").convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = (x_pos, 0)
+
         self.velocity = random.randint(3, 10)
+
         self.add(groups)
-        self.explosion_sound = pygame.mixer.Sound("sizzle.wav")
+        self.explosion_sound = pygame.mixer.Sound("Arcade Explo A.wav")
         self.explosion_sound.set_volume(0.4)
 
     def update(self):
@@ -126,7 +130,7 @@ class EggSprite(pygame.sprite.Sprite):
         if pygame.mixer.get_init():
             self.explosion_sound.play(maxtime=1000)
             Explosion(x, y)
-        super(EggSprite, self).kill()
+        super(EnemySprite, self).kill()
 
 
 class StatusSprite(pygame.sprite.Sprite):
@@ -152,7 +156,7 @@ class StatusSprite(pygame.sprite.Sprite):
 class PanSprite(pygame.sprite.Sprite):
     def __init__(self, groups, weapon_groups):
         super(PanSprite, self).__init__()
-        self.image = pygame.image.load("fryingpan.bmp").convert_alpha()
+        self.image = pygame.image.load("pan.bmp").convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = (X_MAX/2, Y_MAX - 40)
         self.dx = self.dy = 0 #how much to move when you hit arrow 
@@ -176,9 +180,9 @@ class PanSprite(pygame.sprite.Sprite):
             self.rect.center = x + self.dx, y + self.dy
 
             # Handle firing
-            # if self.firing:
-            #     self.shot = BulletSprite(x, y)
-            #     self.shot.add(self.groups)
+            if self.firing:
+                self.shot = BulletSprite(x, y)
+                self.shot.add(self.groups)
 
             if self.health < 0:
                 self.kill()
@@ -215,21 +219,21 @@ class PanSprite(pygame.sprite.Sprite):
             if direction in (LEFT, RIGHT):
                 self.dx = 0
 
-    # def shoot(self, operation):
-    #     if operation == START:
-    #         self.firing = True
-    #     if operation == STOP:
-    #         self.firing = False
+    def shoot(self, operation):
+        if operation == START:
+            self.firing = True
+        if operation == STOP:
+            self.firing = False
 
 
-# def create_starfield(group):
-#     stars = []
-#     for i in range(100):
-#         x, y = random.randrange(X_MAX), random.randrange(Y_MAX)
-#         s = Star(x, y)
-#         s.add(group)
-#         stars.append(s)
-#     return stars
+def create_starfield(group):
+    stars = []
+    for i in range(100):
+        x, y = random.randrange(X_MAX), random.randrange(Y_MAX)
+        s = Star(x, y)
+        s.add(group)
+        stars.append(s)
+    return stars
 
 
 def main():
@@ -244,7 +248,7 @@ def main():
     empty = pygame.Surface((X_MAX, Y_MAX))
     clock = pygame.time.Clock()
 
-    # stars = create_starfield(everything)
+    stars = create_starfield(everything)
 
     pan = PanSprite(everything, weapon_fire)
     pan.add(everything)
@@ -256,7 +260,7 @@ def main():
 
     for i in range(10):
         pos = random.randint(0, X_MAX)
-        EggSprite(pos, [everything, enemies])
+        EnemySprite(pos, [everything, enemies])
 
     # # Get some music
     # if pygame.mixer.get_init():
@@ -323,7 +327,7 @@ def main():
 
         if len(enemies) < 20 and not game_over:
             pos = random.randint(0, X_MAX)
-            EggSprite(pos, [everything, enemies])
+            EnemySprite(pos, [everything, enemies])
 
         # Check for game over
         if pan.score > 1000:

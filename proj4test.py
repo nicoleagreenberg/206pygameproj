@@ -1,6 +1,4 @@
-import pygame
-import time
-import random
+
 import random
 import sys
 
@@ -11,7 +9,11 @@ from pygame.locals import Rect, DOUBLEBUF, QUIT, K_ESCAPE, KEYDOWN, K_DOWN, \
 X_MAX = 800
 Y_MAX = 600 #set dimensions of game using constants 
 
+LEFT, RIGHT, UP, DOWN = 0, 1, 3, 4
+START, STOP = 0, 1
+
 everything = pygame.sprite.Group()
+
 
 class Explosion(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -36,20 +38,21 @@ class Explosion(pygame.sprite.Sprite):
         if self.index >= len(self.images):
             self.kill()
 
-# class Star(pygame.sprite.Sprite):
-#     def __init__(self, x, y):
-#         super(Star, self).__init__()
-#         self.image = pygame.Surface((2, 2))
-#         pygame.draw.circle(self.image,
-#                            (128, 128, 200),
-#                            (0, 0),
-#                            2,
-#                            0)
-#         self.rect = self.image.get_rect()
-#         self.rect.center = (x, y)
-#         self.velocity = 1
-#         self.size = 1
-#         self.colour = 128
+
+class Star(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super(Star, self).__init__()
+        self.image = pygame.Surface((2, 2))
+        pygame.draw.circle(self.image,
+                           (128, 128, 200),
+                           (0, 0),
+                           2,
+                           0)
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+        self.velocity = 1
+        self.size = 1
+        self.colour = 128
 
     def accelerate(self):
         self.image = pygame.Surface((1, self.size))
@@ -80,26 +83,28 @@ class Explosion(pygame.sprite.Sprite):
         else:
             self.rect.center = (x, y + self.velocity)
 
-# class BulletSprite(pygame.sprite.Sprite):
-#     def __init__(self, x, y):
-#         super(BulletSprite, self).__init__()
-#         self.image = pygame.Surface((10, 10))
-#         for i in range(5, 0, -1):
-#             color = 255.0 * float(i)/5
-#             pygame.draw.circle(self.image,
-#                                (0, 0, color),
-#                                (5, 5),
-#                                i,
-#                                0)
-#         self.rect = self.image.get_rect()
-#         self.rect.center = (x, y-25)
 
-#     def update(self):
-#         x, y = self.rect.center
-#         y -= 20
-#         self.rect.center = x, y
-#         if y <= 0:
-#             self.kill()
+class BulletSprite(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super(BulletSprite, self).__init__()
+        self.image = pygame.Surface((10, 10))
+        for i in range(5, 0, -1):
+            color = 255.0 * float(i)/5
+            pygame.draw.circle(self.image,
+                               (0, 0, color),
+                               (5, 5),
+                               i,
+                               0)
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y-25)
+
+    def update(self):
+        x, y = self.rect.center
+        y -= 20
+        self.rect.center = x, y
+        if y <= 0:
+            self.kill()
+
 
 class EggSprite(pygame.sprite.Sprite):
     def __init__(self, x_pos, groups):
@@ -107,19 +112,23 @@ class EggSprite(pygame.sprite.Sprite):
         self.image = pygame.image.load("egg.bmp").convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = (x_pos, 0)
+
         self.velocity = random.randint(3, 10)
+
         self.add(groups)
         self.explosion_sound = pygame.mixer.Sound("sizzle.wav")
         self.explosion_sound.set_volume(0.4)
 
     def update(self):
         x, y = self.rect.center
+
         if y > Y_MAX:
             x, y = random.randint(0, X_MAX), 0
             self.velocity = random.randint(3, 10)
         else:
             x, y = x, y + self.velocity
-        self.rect.center = x, (y+5)
+
+        self.rect.center = x, y
 
     def kill(self):
         x, y = self.rect.center
@@ -130,7 +139,7 @@ class EggSprite(pygame.sprite.Sprite):
 
 
 class StatusSprite(pygame.sprite.Sprite):
-    def __init__(self, pan, groups):
+    def __init__(self, ship, groups):
         super(StatusSprite, self).__init__()
         self.image = pygame.Surface((X_MAX, 30))
         self.rect = self.image.get_rect()
@@ -139,24 +148,24 @@ class StatusSprite(pygame.sprite.Sprite):
         default_font = pygame.font.get_default_font()
         self.font = pygame.font.Font(default_font, 20)
 
-        self.pan = pan
+        self.ship = ship
         self.add(groups)
 
     def update(self):
         score = self.font.render("Health : {} Score : {}".format(
-            self.pan.health, self.pan.score), True, (150, 50, 50))
+            self.ship.health, self.ship.score), True, (150, 50, 50))
         self.image.fill((0, 0, 0))
         self.image.blit(score, (0, 0))
 
 
-class PanSprite(pygame.sprite.Sprite):
+class ShipSprite(pygame.sprite.Sprite):
     def __init__(self, groups, weapon_groups):
-        super(PanSprite, self).__init__()
+        super(ShipSprite, self).__init__()
         self.image = pygame.image.load("fryingpan.bmp").convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = (X_MAX/2, Y_MAX - 40)
         self.dx = self.dy = 0 #how much to move when you hit arrow 
-        #self.firing = self.shot = False
+        self.firing = self.shot = False
         self.health = 100
         self.score = 0
 
@@ -176,9 +185,9 @@ class PanSprite(pygame.sprite.Sprite):
             self.rect.center = x + self.dx, y + self.dy
 
             # Handle firing
-            # if self.firing:
-            #     self.shot = BulletSprite(x, y)
-            #     self.shot.add(self.groups)
+            if self.firing:
+                self.shot = BulletSprite(x, y)
+                self.shot.add(self.groups)
 
             if self.health < 0:
                 self.kill()
@@ -215,21 +224,21 @@ class PanSprite(pygame.sprite.Sprite):
             if direction in (LEFT, RIGHT):
                 self.dx = 0
 
-    # def shoot(self, operation):
-    #     if operation == START:
-    #         self.firing = True
-    #     if operation == STOP:
-    #         self.firing = False
+    def shoot(self, operation):
+        if operation == START:
+            self.firing = True
+        if operation == STOP:
+            self.firing = False
 
 
-# def create_starfield(group):
-#     stars = []
-#     for i in range(100):
-#         x, y = random.randrange(X_MAX), random.randrange(Y_MAX)
-#         s = Star(x, y)
-#         s.add(group)
-#         stars.append(s)
-#     return stars
+def create_starfield(group):
+    stars = []
+    for i in range(100):
+        x, y = random.randrange(X_MAX), random.randrange(Y_MAX)
+        s = Star(x, y)
+        s.add(group)
+        stars.append(s)
+    return stars
 
 
 def main():
@@ -244,12 +253,12 @@ def main():
     empty = pygame.Surface((X_MAX, Y_MAX))
     clock = pygame.time.Clock()
 
-    # stars = create_starfield(everything)
+    stars = create_starfield(everything)
 
-    pan = PanSprite(everything, weapon_fire)
-    pan.add(everything)
+    ship = ShipSprite(everything, weapon_fire)
+    ship.add(everything)
 
-    status = StatusSprite(pan, everything)
+    status = StatusSprite(ship, everything)
 
     deadtimer = 30
     credits_timer = 250
@@ -274,65 +283,65 @@ def main():
             if not game_over:
                 if event.type == KEYDOWN:
                     if event.key == K_DOWN:
-                        pan.steer(DOWN, START)
+                        ship.steer(DOWN, START)
                     if event.key == K_LEFT:
-                        pan.steer(LEFT, START)
+                        ship.steer(LEFT, START)
                     if event.key == K_RIGHT:
-                        pan.steer(RIGHT, START)
+                        ship.steer(RIGHT, START)
                     if event.key == K_UP:
-                        pan.steer(UP, START)
+                        ship.steer(UP, START)
                     if event.key == K_LCTRL:
-                        pan.shoot(START)
+                        ship.shoot(START)
                     if event.key == K_RETURN:
-                        if pan.mega:
-                            pan.mega -= 1
+                        if ship.mega:
+                            ship.mega -= 1
                             for i in enemies:
                                 i.kill()
 
                 if event.type == KEYUP:
                     if event.key == K_DOWN:
-                        pan.steer(DOWN, STOP)
+                        ship.steer(DOWN, STOP)
                     if event.key == K_LEFT:
-                        pan.steer(LEFT, STOP)
+                        ship.steer(LEFT, STOP)
                     if event.key == K_RIGHT:
-                        pan.steer(RIGHT, STOP)
+                        ship.steer(RIGHT, STOP)
                     if event.key == K_UP:
-                        pan.steer(UP, STOP)
+                        ship.steer(UP, STOP)
                     if event.key == K_LCTRL:
-                        pan.shoot(STOP)
+                        ship.shoot(STOP)
 
         # Check for impact
-        hit_pan = pygame.sprite.spritecollide(pan, enemies, True)
-        for i in hit_pan:
-            pan.health -= 15
+        hit_ships = pygame.sprite.spritecollide(ship, enemies, True)
+        for i in hit_ships:
+            ship.health -= 15
 
-        if pan.health < 0:
+        if ship.health < 0:
             if deadtimer:
                 deadtimer -= 1
             else:
                 game_over = True
 
         # Check for successful attacks
-        hit_pan = pygame.sprite.groupcollide(
+        hit_ships = pygame.sprite.groupcollide(
             enemies, weapon_fire, True, True)
-        for k, v in hit_pan.items():
+        for k, v in hit_ships.items():
             k.kill()
             for i in v:
                 i.kill()
-                pan.score += 10
+                ship.score += 10
 
         if len(enemies) < 20 and not game_over:
             pos = random.randint(0, X_MAX)
             EggSprite(pos, [everything, enemies])
 
         # Check for game over
-        if pan.score > 1000:
+        if ship.score > 1000:
             game_over = True
             for i in enemies:
                 i.kill()
 
-            pan.autopilot = True
-            pan.shoot(STOP)
+            ship.autopilot = True
+            ship.shoot(STOP)
 
         if game_over:
             #pygame.mixer.music.fadeout(8000)
