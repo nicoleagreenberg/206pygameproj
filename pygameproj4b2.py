@@ -26,10 +26,6 @@ class StoveSprite(pygame.sprite.Sprite):
         self.rect.center = (400, 700)
         self.groups = [groups]
 
-    def update(self):
-        x, y = self.rect.center
-        self.rect.center = x, y
-
 class Explosion(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super(Explosion, self).__init__()
@@ -52,6 +48,18 @@ class Explosion(pygame.sprite.Sprite):
         self.index += 1
         if self.index >= len(self.images):
             self.kill()
+
+class Fried(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super(Fried, self).__init__()
+        self.image = pygame.image.load("friedegg.bmp").convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+        self.add(everything)
+
+    def update(self):
+        self.image = pygame.image.load("friedegg.bmp").convert_alpha()
+        #self.kill()
 
 class EggSprite(pygame.sprite.Sprite):
     def __init__(self, x_pos, groups):
@@ -81,7 +89,7 @@ class EggSprite(pygame.sprite.Sprite):
         x, y = self.rect.center
         if pygame.mixer.get_init():
             self.explosion_sound.play(maxtime=1000)
-            Explosion(x, y)
+            Fried(x, y)
         super(EggSprite, self).kill()
 
     def fry(self):
@@ -91,20 +99,7 @@ class EggSprite(pygame.sprite.Sprite):
             Fried(x, y)
         super(EggSprite, self).kill()
 
-class Fried(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        super(Explosion, self).__init__()
-        self.image = pygame.image.load("friedegg.bmp").convert_alpha()
 
-        self.rect = self.image.get_rect()
-        self.rect.center = (x, y)
-        self.add(everything)
-
-    def update(self):
-        # self.image = self.image
-        # self.index += 1
-        # if self.index >= len(self.images):
-        self.kill()
 
 class StatusSprite(pygame.sprite.Sprite):
     def __init__(self, pan, groups):
@@ -267,7 +262,7 @@ def main():
         # Check for successful attacks
         hit_stove = pygame.sprite.spritecollide(stove, enemies, True)
         for k in hit_stove:
-            k.kill()
+            k.fry()
             pan.score -= 10
 
         hit_pan = pygame.sprite.spritecollide(pan, enemies, True) 
