@@ -8,13 +8,9 @@ from pygame.locals import Rect, DOUBLEBUF, QUIT, K_ESCAPE, KEYDOWN, K_DOWN, \
 
 X_MAX = 800
 Y_MAX = 600 #set dimensions of game using constants 
-# bg_x = 0
-# bg_y = 400
 
 LEFT, RIGHT, UP, DOWN = 0, 1, 3, 4
 START, STOP = 0, 1
-
-# bg = pygame.image.load("stovetop.bmp")
 
 everything = pygame.sprite.Group()
 
@@ -64,7 +60,7 @@ class Fried(pygame.sprite.Sprite):
 class EggSprite(pygame.sprite.Sprite):
     def __init__(self, x_pos, groups):
         super(EggSprite, self).__init__()
-        self.image = pygame.image.load("egg.bmp").convert_alpha()
+        self.image = pygame.image.load("egg2.bmp").convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = (x_pos, 0)
         self.velocity = random.randint(3, 10)
@@ -80,10 +76,6 @@ class EggSprite(pygame.sprite.Sprite):
         else:
             x, y = x, y + self.velocity
         self.rect.center = x, (y+5)
-        
-        #Do a check here and see if the egg is at bg_y, if so change picture etc .
-        # if self.rect.center =< 450:
-        #     elf.image = pygame.image.load("egg.bmp").convert_alpha()
 
     def kill(self):
         x, y = self.rect.center
