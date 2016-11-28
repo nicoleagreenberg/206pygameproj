@@ -115,7 +115,7 @@ class StatusSprite(pygame.sprite.Sprite):
 class PanSprite(pygame.sprite.Sprite):
     def __init__(self, groups):
         super(PanSprite, self).__init__()
-        self.image = pygame.image.load("fryingpan.bmp").convert_alpha()
+        self.image = pygame.image.load("redpan.bmp").convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = (X_MAX/2, Y_MAX - 40)
         self.dx = self.dy = 0 #how much to move when you hit arrow 
