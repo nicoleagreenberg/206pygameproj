@@ -9,7 +9,11 @@ from pygame.locals import Rect, DOUBLEBUF, QUIT, K_ESCAPE, KEYDOWN, K_DOWN, \
 X_MAX = 800
 Y_MAX = 600 #set dimensions of game using constants 
 bg_x = 0
-bg_y = 450
+bg_y = 400
+
+LEFT, RIGHT, UP, DOWN = 0, 1, 3, 4
+START, STOP = 0, 1
+
 
 bg = pygame.image.load("stovetop.bmp")
 
@@ -20,23 +24,23 @@ class Explosion(pygame.sprite.Sprite):
         super(Explosion, self).__init__()
         sheet = pygame.image.load("x.bmp")
         self.images = []
-    #     for i in range(0, 768, 48):
-    #         rect = pygame.Rect((i, 0, 48, 48))
-    #         image = pygame.Surface(rect.size)
-    #         image.blit(sheet, (0, 0), rect)
-    #         self.images.append(image)
+        for i in range(0, 768, 48):
+            rect = pygame.Rect((i, 0, 48, 48))
+            image = pygame.Surface(rect.size)
+            image.blit(sheet, (0, 0), rect)
+            self.images.append(image)
 
-    #     self.image = self.images[0]
-    #     self.index = 0
-    #     self.rect = self.image.get_rect()
-    #     self.rect.center = (x, y)
-    #     self.add(everything)
+        self.image = self.images[0]
+        self.index = 0
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+        self.add(everything)
 
-    # def update(self):
-    #     self.image = self.images[self.index]
-    #     self.index += 1
-    #     if self.index >= len(self.images):
-    #         self.kill()
+    def update(self):
+        self.image = self.images[self.index]
+        self.index += 1
+        if self.index >= len(self.images):
+            self.kill()
 
     # def accelerate(self):
     #     self.image = pygame.Surface((1, self.size))
@@ -60,12 +64,12 @@ class Explosion(pygame.sprite.Sprite):
     #     x, y = self.rect.center
     #     self.rect.center = random.randrange(X_MAX), y
 
-    def update(self):
-        x, y = self.rect.center
-        if self.rect.center[1] > Y_MAX:
-            self.rect.center = (x, 0)
-        else:
-            self.rect.center = (x, y + self.velocity)
+    # def update(self):
+    #     x, y = self.rect.center
+    #     if self.rect.center[1] > Y_MAX:
+    #         self.rect.center = (x, 0)
+    #     else:
+    #         self.rect.center = (x, y + self.velocity)
 
 class EggSprite(pygame.sprite.Sprite):
     def __init__(self, x_pos, groups):
@@ -86,6 +90,10 @@ class EggSprite(pygame.sprite.Sprite):
         else:
             x, y = x, y + self.velocity
         self.rect.center = x, (y+5)
+
+        #Do a check here and see if the egg is at bg_y, if so change picture etc .
+        # if self.rect.center =< 450:
+        #     elf.image = pygame.image.load("egg.bmp").convert_alpha()
 
     def kill(self):
         x, y = self.rect.center
@@ -277,8 +285,7 @@ def main():
 
         if game_over:
             #pygame.mixer.music.fadeout(8000)
-            for i in stars:
-                i.accelerate()
+        
             if credits_timer:
                 credits_timer -= 1
             else:
@@ -286,7 +293,7 @@ def main():
                 sys.exit()
 
         # Update sprites
-        screen.blit(bg, (bg_x, 0))
+        screen.blit(bg, (bg_x, bg_y))
         everything.clear(screen, empty)
         everything.update()
         everything.draw(screen)
