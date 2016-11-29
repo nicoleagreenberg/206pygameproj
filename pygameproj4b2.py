@@ -12,15 +12,11 @@ Y_MAX = 600 #set dimensions of game using constants
 LEFT, RIGHT, UP, DOWN = 0, 1, 3, 4
 START, STOP = 0, 1
 
-everything = pygame.sprite.Group()
+bg = pygame.image.load("stovetop.bmp")
+bg_x = 0
+bg_y = 400
 
-class StoveSprite(pygame.sprite.Sprite):
-    def __init__(self, groups):
-        super(StoveSprite, self).__init__()
-        self.image = pygame.image.load("stovetop.bmp").convert_alpha()
-        self.rect = self.image.get_rect()
-        self.rect.center = (400, 700)
-        self.groups = [groups]
+everything = pygame.sprite.Group()
 
 class Explosion(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -52,10 +48,12 @@ class Fried(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.add(everything)
+        self.index = 0
 
     def update(self):
-        self.image = pygame.image.load("friedegg.bmp").convert_alpha()
-        #self.kill()
+        self.index += 1
+        if self.index >= 5:
+            self.kill()
 
 class EggSprite(pygame.sprite.Sprite):
     def __init__(self, x_pos, groups):
@@ -63,7 +61,7 @@ class EggSprite(pygame.sprite.Sprite):
         self.image = pygame.image.load("egg2.bmp").convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = (x_pos, 0)
-        self.velocity = random.randint(3, 10)
+        self.velocity = random.randint(1, 4)
         self.add(groups)
         self.explosion_sound = pygame.mixer.Sound("sizzle.wav")
         self.explosion_sound.set_volume(0.4)
@@ -77,13 +75,6 @@ class EggSprite(pygame.sprite.Sprite):
             x, y = x, y + self.velocity
         self.rect.center = x, (y+5)
 
-    def kill(self):
-        x, y = self.rect.center
-        if pygame.mixer.get_init():
-            self.explosion_sound.play(maxtime=1000)
-            Fried(x, y)
-        super(EggSprite, self).kill()
-
     def fry(self):
         x, y = self.rect.center
         if pygame.mixer.get_init():
@@ -91,7 +82,13 @@ class EggSprite(pygame.sprite.Sprite):
             Fried(x, y)
         super(EggSprite, self).kill()
 
-
+    def explode(self):
+        x, y = self.rect.center
+        if pygame.mixer.get_init():
+            self.explosion_sound.play(maxtime=1000)
+            Explosion(x, y)
+        super(EggSprite, self).kill()
+    
 
 class StatusSprite(pygame.sprite.Sprite):
     def __init__(self, pan, groups):
@@ -119,7 +116,7 @@ class PanSprite(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (X_MAX/2, Y_MAX - 40)
         self.dx = self.dy = 0 #how much to move when you hit arrow 
-        self.health = 100
+        self.health = 10000
         self.score = 0
 
         self.groups = [groups]
@@ -178,16 +175,15 @@ def main():
     screen = pygame.display.set_mode((X_MAX, Y_MAX), DOUBLEBUF)
     enemies = pygame.sprite.Group()
 
+    
+
     empty = pygame.Surface((X_MAX, Y_MAX))
     clock = pygame.time.Clock()
 
     pan = PanSprite(everything)
     pan.add(everything)
 
-    stove = StoveSprite(everything)
-    stove.add(everything)
-
-    status = StatusSprite(pan, enemies)
+    status = StatusSprite(pan, everything)
 
     deadtimer = 30
     credits_timer = 250
@@ -241,43 +237,40 @@ def main():
                         pan.shoot(STOP)
 
         # Check for impact
-        hit_pan = pygame.sprite.spritecollide(pan, enemies, True)
-        for i in hit_pan:
-            pan.health -= 15
-
         if pan.health < 0:
             if deadtimer:
                 deadtimer -= 1
-            else:
                 game_over = True
+            else:
+                sys.exit()
 
         # Check for successful attacks
-        hit_stove = pygame.sprite.spritecollide(stove, enemies, True)
-        for k in hit_stove:
-            k.fry()
-            pan.score -= 10
-
         hit_pan = pygame.sprite.spritecollide(pan, enemies, True) 
+        
         for k in hit_pan:
             k.fry()
             pan.score += 10
 
-        if len(enemies) < 20 and not game_over:
+        if len(enemies) < 10 and not game_over:
             pos = random.randint(0, X_MAX)
             EggSprite(pos, [everything, enemies])
+
+        for i in enemies:
+            if i.rect.center[1]>400:
+                pan.health -= 10
+                i.explode()
 
         # Check for game over
         if pan.score > 2000:
             game_over = True
             for i in enemies:
-                i.kill()
+                i.explode()
 
             pan.autopilot = True
             pan.shoot(STOP)
 
         if game_over:
             #pygame.mixer.music.fadeout(8000)
-        
             if credits_timer:
                 credits_timer -= 1
             else:
@@ -285,7 +278,7 @@ def main():
                 sys.exit()
 
         # Update sprites
-        # screen.blit(bg, (bg_x, bg_y))
+        screen.blit(bg, (bg_x, bg_y))
         everything.clear(screen, empty)
         everything.update()
         everything.draw(screen)
