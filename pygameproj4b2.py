@@ -64,6 +64,7 @@ class EggSprite(pygame.sprite.Sprite):
         self.velocity = random.randint(1, 4)
         self.add(groups)
         self.explosion_sound = pygame.mixer.Sound("sizzle.wav")
+        self.crack_sound = pygame.mixer.Sound("eggcrack.wav")
         self.explosion_sound.set_volume(0.4)
 
     def update(self):
@@ -78,7 +79,7 @@ class EggSprite(pygame.sprite.Sprite):
     def fry(self):
         x, y = self.rect.center
         if pygame.mixer.get_init():
-            self.explosion_sound.play(maxtime=1000)
+            self.crack_sound.play(maxtime=1000)
             Fried(x, y)
         super(EggSprite, self).kill()
 
