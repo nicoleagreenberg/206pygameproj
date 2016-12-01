@@ -191,13 +191,6 @@ def main():
     for i in range(4):
         pos = random.randint(0, X_MAX)
         EggSprite(pos, [everything, enemies])
-
-    # # Get some music
-    # if pygame.mixer.get_init():
-    #     pygame.mixer.music.load("DST-AngryMod.mp3")
-    #     pygame.mixer.music.set_volume(0.8)
-    #     pygame.mixer.music.play(-1)
-
     while True:
         clock.tick(30)
         # Check for input
@@ -270,7 +263,6 @@ def main():
             pan.shoot(STOP)
 
         if game_over:
-            #pygame.mixer.music.fadeout(8000)
             if credits_timer:
                 credits_timer -= 1
             else:
