@@ -48,6 +48,7 @@ class Fried(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.add(everything)
+        self.explosion_sound = pygame.mixer.Sound("oops.wav")
         self.index = 0
 
     def update(self):
@@ -63,15 +64,16 @@ class EggSprite(pygame.sprite.Sprite):
         self.rect.center = (x_pos, 0)
         self.velocity = random.randint(1, 4)
         self.add(groups)
-        self.explosion_sound = pygame.mixer.Sound("sizzle.wav")
         self.crack_sound = pygame.mixer.Sound("eggcrack.wav")
+        self.sizzle_sound = pygame.mixer.Sound("sizzle.wav")
+        self.explosion_sound = pygame.mixer.Sound("oops.wav")
         self.explosion_sound.set_volume(0.4)
 
     def update(self):
         x, y = self.rect.center
         if y > Y_MAX:
             x, y = random.randint(0, X_MAX), 0
-            self.velocity = random.randint(3, 10)
+            self.velocity = random.randint(1, 4)
         else:
             x, y = x, y + self.velocity
         self.rect.center = x, (y+5)
@@ -80,6 +82,7 @@ class EggSprite(pygame.sprite.Sprite):
         x, y = self.rect.center
         if pygame.mixer.get_init():
             self.crack_sound.play(maxtime=1000)
+            self.sizzle_sound.play(maxtime=1000)
             Fried(x, y)
         super(EggSprite, self).kill()
 
@@ -90,7 +93,6 @@ class EggSprite(pygame.sprite.Sprite):
             Explosion(x, y)
         super(EggSprite, self).kill()
     
-
 class StatusSprite(pygame.sprite.Sprite):
     def __init__(self, pan, groups):
         super(StatusSprite, self).__init__()
@@ -105,7 +107,7 @@ class StatusSprite(pygame.sprite.Sprite):
         self.add(groups)
 
     def update(self):
-        score = self.font.render("Health Score: : {} Score : {}".format(
+        score = self.font.render("Health Score: : {} Fried Eggs : {}".format(
             self.pan.health, self.pan.score), True, (150, 50, 50))
         self.image.fill((0, 0, 0))
         self.image.blit(score, (0, 0))
@@ -113,17 +115,16 @@ class StatusSprite(pygame.sprite.Sprite):
 class PanSprite(pygame.sprite.Sprite):
     def __init__(self, groups):
         super(PanSprite, self).__init__()
-        self.image = pygame.image.load("redpan.bmp").convert_alpha()
+        self.image = pygame.image.load("redpan1.bmp").convert()
+        self.TransColor = self.image.get_at((0,0))
+        self.image.set_colorkey((self.TransColor))
         self.rect = self.image.get_rect()
         self.rect.center = (X_MAX/2, Y_MAX - 40)
         self.dx = self.dy = 0 #how much to move when you hit arrow 
-        self.health = 10000
+        self.health = 500
         self.score = 0
-
         self.groups = [groups]
-
         self.mega = 1
-
         self.autopilot = False
         self.in_position = False
         self.velocity = 2
@@ -176,8 +177,6 @@ def main():
     screen = pygame.display.set_mode((X_MAX, Y_MAX), DOUBLEBUF)
     enemies = pygame.sprite.Group()
 
-    
-
     empty = pygame.Surface((X_MAX, Y_MAX))
     clock = pygame.time.Clock()
 
@@ -189,7 +188,7 @@ def main():
     deadtimer = 30
     credits_timer = 250
 
-    for i in range(10):
+    for i in range(4):
         pos = random.randint(0, X_MAX)
         EggSprite(pos, [everything, enemies])
 
@@ -250,9 +249,9 @@ def main():
         
         for k in hit_pan:
             k.fry()
-            pan.score += 10
+            pan.score += 1
 
-        if len(enemies) < 10 and not game_over:
+        if len(enemies) < 3 and not game_over:
             pos = random.randint(0, X_MAX)
             EggSprite(pos, [everything, enemies])
 
@@ -284,6 +283,7 @@ def main():
         everything.update()
         everything.draw(screen)
         pygame.display.flip()
+
 
 
 if __name__ == '__main__':
